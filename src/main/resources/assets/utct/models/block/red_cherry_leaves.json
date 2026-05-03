@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "utct:block/red_cherry_leaves"
+  }
+}
