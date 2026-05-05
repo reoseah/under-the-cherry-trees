@@ -1,16 +1,19 @@
 {
   "variants": {
-    "axis=x": {
-      "model": "utct:block/suspicious_cherry_log_horizontal",
-      "x": 90,
+    "facing=east": {
+      "model": "utct:block/cherry_hollow",
       "y": 90
     },
-    "axis=y": {
-      "model": "utct:block/suspicious_cherry_log"
+    "facing=north": {
+      "model": "utct:block/cherry_hollow"
     },
-    "axis=z": {
-      "model": "utct:block/suspicious_cherry_log_horizontal",
-      "x": 90
+    "facing=south": {
+      "model": "utct:block/cherry_hollow",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "utct:block/cherry_hollow",
+      "y": 270
     }
   }
 }

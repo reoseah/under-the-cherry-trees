@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utct:block/cherry_hollow"
+    "model": "utct:item/red_cherry_sapling"
   }
 }

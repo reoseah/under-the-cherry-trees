@@ -1,8 +1,8 @@
 package io.github.reoseah.utct;
 
 import net.fabricmc.api.ModInitializer;
-
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -12,19 +12,24 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.TintedParticleLeavesBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static net.minecraft.world.level.block.Blocks.leavesProperties;
-import static net.minecraft.world.level.block.Blocks.logProperties;
 
 public class UTCT implements ModInitializer {
     public static final String MOD_ID = "utct";
@@ -35,10 +40,15 @@ public class UTCT implements ModInitializer {
     public void onInitialize() {
         Blocks.initialize();
         Items.initialize();
+        BlockEntityTypes.initialize();
     }
 
     public static Identifier modId(String path) {
         return Identifier.fromNamespaceAndPath(MOD_ID, path);
+    }
+
+    public static <T> ResourceKey<T> modKey(ResourceKey<? extends Registry<T>> registryKey, String location) {
+        return ResourceKey.create(registryKey, modId(location));
     }
 
     public static class Blocks {
@@ -50,8 +60,27 @@ public class UTCT implements ModInitializer {
                         new TintedParticleLeavesBlock(0.01F, properties),
                 leavesProperties(SoundType.GRASS)
         );
-        public static final Block SUSPICIOUS_CHERRY_LOG = register("suspicious_cherry_log", RotatedPillarBlock::new,
-                logProperties(MapColor.WOOD, MapColor.PODZOL, SoundType.WOOD));
+        public static final Block SUSPICIOUS_CHERRY_LOG = register("suspicious_cherry_log", SuspiciousCherryLogBlock::new,
+                BlockBehaviour.Properties.of().mapColor((state) -> MapColor.COLOR_PINK).instrument(NoteBlockInstrument.BASS).strength(2.0F).sound(SoundType.WOOD).ignitedByLava());
+
+        public static final TreeGrower RED_CHERRY_TREE = new TreeGrower( //
+                "utct:red_cherry_tree", //
+                0F, //
+                Optional.empty(), //
+                Optional.empty(), //
+                Optional.of(modKey(Registries.CONFIGURED_FEATURE, "red_cherry_tree")), //
+                Optional.empty(), //
+                Optional.empty(), //
+                Optional.empty());
+        public static final Block RED_CHERRY_SAPLING = register("red_cherry_sapling",
+                properties -> new SaplingBlock(RED_CHERRY_TREE, properties),
+                BlockBehaviour.Properties.of()
+                        .mapColor(MapColor.PLANT)
+                        .noCollision()
+                        .randomTicks()
+                        .instabreak()
+                        .sound(SoundType.GRASS)
+                        .pushReaction(PushReaction.DESTROY));
 
         public static void initialize() {
         }
@@ -67,6 +96,7 @@ public class UTCT implements ModInitializer {
         public static final Item RED_CHERRY_LEAVES = register(Blocks.RED_CHERRY_LEAVES);
         public static final Item CHERRY_BRANCHES = register(Blocks.CHERRY_BRANCHES);
         public static final Item SUSPICIOUS_CHERRY_LOG = register(Blocks.SUSPICIOUS_CHERRY_LOG);
+        public static final Item RED_CHERRY_SAPLING = register(Blocks.RED_CHERRY_SAPLING);
 
         private static void initialize() {
             CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS) //
@@ -74,6 +104,7 @@ public class UTCT implements ModInitializer {
                         group.accept(RED_CHERRY_LEAVES);
                         group.accept(CHERRY_BRANCHES);
                         group.accept(SUSPICIOUS_CHERRY_LOG);
+                        group.accept(RED_CHERRY_SAPLING);
                     });
         }
 
@@ -109,6 +140,20 @@ public class UTCT implements ModInitializer {
             var id = modId(name);
             properties.setId(ResourceKey.create(Registries.ITEM, id));
             return Registry.register(BuiltInRegistries.ITEM, id, constructor.apply(properties));
+        }
+    }
+
+    public static class BlockEntityTypes {
+        public static final BlockEntityType<SuspiciousCherryLogEntity> SUSPICIOUS_CHERRY_LOG = register("cherry_hollow", SuspiciousCherryLogEntity::new, Blocks.SUSPICIOUS_CHERRY_LOG);
+
+        public static void initialize() {
+        }
+
+        public static <T extends BlockEntity> BlockEntityType<T> register(String name, FabricBlockEntityTypeBuilder.Factory<T> constructor, Block... blocks) {
+            var key = ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, modId(name));
+            var type = FabricBlockEntityTypeBuilder.create(constructor, blocks).build();
+
+            return Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, key, type);
         }
     }
 }
